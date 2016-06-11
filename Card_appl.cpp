@@ -2,12 +2,19 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <time.h>
+#include <stack>
 using namespace std;
 
 struct Card{
     int sval;
     int rval;
+};
+
+struct SubProblem{
+	Card target;
+	int depth;
+	int result;
+	vector<Card> list;
 };
 
 int pow(int n){
@@ -23,12 +30,14 @@ private:
     int size;
     int num;
     int err;
+	vector<int> m_set;
     vector<int> result;
+	stack<SubProblem> st;
 
 	void function(Card target, int depth, int ret, vector<Card> cList, bool flag){
 		int value = flag? target.sval: target.rval;
 		vector<Card> list(cList);
-		ret += value*pow(depth-1);
+		ret += value*pow(size-depth);
 		for(auto itr = list.begin(); itr != list.end(); ++itr) {
 			if(itr->sval==target.sval && itr->rval==target.rval){
 				list.erase(itr);
@@ -36,17 +45,25 @@ private:
 			}
 		}
 		vector<Card> copy(list);
-		depth++;
         while(!copy.empty()){
             Card next_t = copy.back();
             copy.pop_back();
-            explor(next_t, depth, ret, list);
+			int tmp1 = ret + next_t.sval*pow(size-(depth+1));
+			int tmp2 = ret + next_t.rval*pow(size-(depth+1));
+			int err = abs(num-ret);
+			SubProblem sp = {next_t, depth+1, ret, list};
+			if(err==0) st.push(sp);
+			else{
+				if((err>=abs(num-tmp1))||(err>=abs(num-tmp2))){
+					st.push(sp);
+				}
+			}
         }
 	}
 
-	void evalute(int ret, Card target, bool flag){
-		ret += (flag)? target.sval*pow(size-1): target.rval*pow(size-1);
-		if(ret < pow(size-1) && ret!=0) return;
+	bool evalute(int ret, Card target, bool flag){
+		ret += ((flag)? target.sval: target.rval);
+		if(ret < pow(size-1) && ret!=0) return(false);
         if(err > abs(num-ret)){
             err = abs(num-ret);
             result.clear();
@@ -55,7 +72,8 @@ private:
             err = abs(num-ret);
             result.push_back(ret);
         }
-        return;
+		if(err == 0) return(true);
+        return(false);
 	}
 
 public:
@@ -63,25 +81,86 @@ public:
         size = n;
         num = m;
         err = pow(size);
+		for(int i=size;i>0;i--){
+			m_set.push_back(m/pow(i-1));
+			m -= (m/pow(i-1))*pow(i-1);
+		}
     }
     
 	vector<int>getResult(){
 		return(result);
 	}
 
-    void explor(Card target, int depth, int ret, vector<Card> cList){
-        if(depth == size){
-			evalute(ret, target, true);
-			evalute(ret, target, false);
-        }else if(depth==0){
-			depth++;
-			for(size_t i=0;i<cList.size();i++){
-				explor(cList.at(i), depth, 0, cList);
+    void explor(Card t, int d, int r, vector<Card> cL){
+		SubProblem sb = {t, d, r, cL};
+		st.push(sb);
+		while( !st.empty() ){
+			sb = st.top();
+			st.pop();
+			if(sb.depth == size){
+				if( evalute(sb.result, sb.target, true) ) break;
+				if( evalute(sb.result, sb.target, false) ) break;
+			}else if(sb.depth==0){
+				for(size_t i=0;i<sb.list.size();i++){
+					Card target = sb.list.at(i);
+					SubProblem sp = {target, sb.depth+1, 0, sb.list};
+					if(((m_set.at(0)+2>target.sval)&&(m_set.at(0)-2<target.sval))
+						||((m_set.at(0)+2>target.rval)&&(m_set.at(0)-2<target.rval))){
+						st.push(sp);
+					}
+				}
+			}else if(sb.depth >= 1 && sb.depth < size-1){
+				int d = sb.depth-1;
+				int m_d = m_set.at(d);
+				switch(m_d)
+				{
+				case 0:
+					if(sb.target.sval==9||sb.target.sval==0||sb.target.sval==1){
+						function(sb.target, sb.depth, sb.result, sb.list, true);
+					}
+					if(sb.target.rval==9||sb.target.rval==0||sb.target.rval==1){
+						function(sb.target, sb.depth, sb.result, sb.list, false);
+					}
+					break;
+				case 9:
+					if(sb.target.sval==8||sb.target.sval==9||sb.target.sval==0){
+						function(sb.target, sb.depth, sb.result, sb.list, true);
+					}
+					if(sb.target.rval==8||sb.target.rval==9||sb.target.rval==0){
+						function(sb.target, sb.depth, sb.result, sb.list, false);
+					}
+					break;
+				default:
+					if(((m_d+2>sb.target.sval)&&(m_d-2<sb.target.sval))){
+						function(sb.target, sb.depth, sb.result, sb.list, true);
+					}
+					if(((m_d+2>sb.target.rval)&&(m_d-2<sb.target.rval))){
+						function(sb.target, sb.depth, sb.result, sb.list, false);
+					}
+					int err = pow(size);
+					for(int i=m_d-2;i<m_d+2;i++){
+						int tmp = 0;
+						if(i >= 0){ 
+							tmp = sb.result + i*pow(size-(sb.depth+1));
+							if(err > abs(num-tmp)) err = abs(num-tmp);
+						}
+					}
+					int tmp1 = sb.result + sb.target.sval*pow(size-(sb.depth+1));
+					int tmp2 = sb.result + sb.target.rval*pow(size-(sb.depth+1));
+					if(err>=abs(num-tmp1)){
+						function(sb.target, sb.depth, sb.result, sb.list, true);
+					}
+					if(err>=abs(num-tmp2)){
+						function(sb.target, sb.depth, sb.result, sb.list, false);
+					}
+					break;
+				}
+				
+			}else if(sb.depth < size){
+				function(sb.target, sb.depth, sb.result, sb.list, true);
+				function(sb.target, sb.depth, sb.result, sb.list, false);
 			}
-		}else if(depth < size){
-			function(target, depth, ret, cList, true);
-			function(target, depth, ret, cList, false);
-        }
+		}
     }
 };    
 
@@ -142,8 +221,7 @@ public:
 
 
 int main(){
-	clock_t time_s = clock();    // スタート時間
-    int n=0, m=0;
+	int n=0, m=0;
     char c;
     string str;
     cin >> n >> c >> m>> c>> str;
@@ -154,7 +232,13 @@ int main(){
         card.rval = atoi(&str.at(i))%10;
         cList.push_back(card);
     }
-    if(cList.size() < n){
+	bool flag = false;
+	for(size_t i=0;i<cList.size();i++){
+		if(cList.at(i).sval != 0) break;
+		if(cList.at(i).rval != 0) break;
+		if(i == cList.size()-1) flag = true;
+	}
+    if(cList.size() < n || flag){
         cout<<"-"<<endl;
         return(0);
     }
@@ -169,9 +253,7 @@ int main(){
         return(0);
     }
 
-	Card start;
-	start.sval = 0;
-	start.rval = 0;
+	Card start = {0, 0};
 	DFS *dfs = new DFS(n, m);
 	dfs->explor(start, 0, 0, cList);
 	vector<int> result = dfs->getResult();
@@ -196,9 +278,5 @@ int main(){
 	}
 	if(ret2 == 0) cout<<ret1<<endl;
 	else cout<<min(ret1,ret2)<<","<<max(ret1,ret2)<<endl;
-
-	clock_t time_e = clock();     // 終了時間
-    cout << "duration = " << (double)(time_e - time_s) / CLOCKS_PER_SEC << "sec.\n";
-
     return(0);
 }
