@@ -54,8 +54,8 @@ class Calc{
                     sol[i][j] = sol[i-1][j];
                 }else{
                     Sols sc = sol[i-1][j-card.cost];
-                    if(sc.score+card.score > sol[i-1][j].score){
-                        int s = getConstN(sc.num, card.score);
+                    int s = getConstN(sc.num, card.score);
+                    if(sc.score+s > sol[i-1][j].score){
                         Sols c = new Sols(s+sc.score, sc.num+1);
                         sol[i][j] = c;
                     }else{
