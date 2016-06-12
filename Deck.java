@@ -28,39 +28,55 @@ class Calc{
     private int cMax;
     private int sMax;
     private Vector<Card> clist;
+    public int counter;
     public Calc(int n, int c, Vector<Card> list){
         nMax = n;
         cMax = c;
         clist = list;
     }
-    public void execute(){
-        int m[][][] = new int[clist.size()+1][cMax+1][nMax+1];
-        for(int i=0;i<cMax;i++){
-            for(int j=0;j<nMax;j++){
-                m[0][i][j] = 0;
-            }
+    
+    private int getConstN(int y, int num){
+        if(nMax-y>=1){
+            return(num);
         }
-        int weight = 0;
+        return(0);
+    }
+    
+    public void execute(){
+        Sols sol[][] = new Sols[clist.size()+1][cMax+1];
+        for(int i=0;i<=cMax;i++){
+            sol[0][i] = new Sols( 0, 0);
+        }
         for(int i=1;i<=clist.size();i++){
             Card card = new Card(clist.elementAt(i-1));
             for(int j=0;j<=cMax;j++){
-                for(int k=1;k<=nMax;k++){
-                    if(j < card.cost){
-                        m[i][j][k] = m[i-1][j][k];
+                if(j < card.cost){
+                    sol[i][j] = sol[i-1][j];
+                }else{
+                    Sols sc = sol[i-1][j-card.cost];
+                    if(sc.score+card.score > sol[i-1][j].score){
+                        int s = getConstN(sc.num, card.score);
+                        Sols c = new Sols(s+sc.score, sc.num+1);
+                        sol[i][j] = c;
                     }else{
-                        if(m[i-1][j][k] < card.score+m[i-1][j-card.cost][k-1]){
-                            m[i][j][k] = card.score+m[i-1][j-card.cost][k-1];
-                        }else{
-                            m[i][j][k] = m[i-1][j][k];
-                        }
+                        sol[i][j] = sol[i-1][j];
                     }
                 }
             }
         }
-        sMax = m[clist.size()][cMax][nMax];
+        sMax = sol[clist.size()][cMax].score;
     }
     public int getScore(){
         return(sMax);
+    }
+}
+
+class Sols{
+    public int score;
+    public int num;
+    public Sols(int s, int n){
+        score = s;
+        num = n;
     }
 }
 
