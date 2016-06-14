@@ -3,13 +3,17 @@
 #include <vector>
 #include <cctype>
 #include <cstdlib>
+#include <math.h>
 
 using namespace std;
 
-struct Count7{
-    int num;
-    int counter;
-};
+int getDigOne(int num){
+    return( (num < 7)? 0: 1);
+}
+
+int getDigNum(int num, int d){
+    return(num*d*pow(10, d-1));
+}
 
 int main(){
     string line;
@@ -18,27 +22,27 @@ int main(){
         nums.push_back(atoi(line.c_str()));
     }
     
-    int n_max = 0;
-    for(size_t l=0;l<nums.size();l++){
-        if(n_max < nums.at(l) ){
-            n_max = nums.at(l);
-        }
-    }
-    
-    vector<int> list;
-    int counter=0;
-    for(int i=1;i<=n_max;i++){
-        string str = to_string(i);
-        for(unsigned int l=0;l<str.length();l++){
-            if(str[l] == '7'){
-                counter++;
-            }
-        }
-        list.push_back(counter);
-    }
-    
     for(size_t i=0;i<nums.size();i++){
-        cout<<list.at(nums.at(i)-1)<<endl;
+        int result = 0;
+        int num = nums.at(i);
+        int d = (int)log10(num)+1;
+        for(int i=d-1;i>=0;i--){
+            int n = num/pow(10, i);
+            if( i != 0){
+                if( n == 7){
+                    result += getDigNum(n, i)+(num-n*pow(10, i))+1;
+                }else if( n > 7){
+                    result += getDigNum(n, i)+pow(10, i);
+                }else{
+                    result += getDigNum(n, i);
+                }
+            }else{
+                result += getDigOne(n);
+            }
+            num -= n*pow(10, i);
+        }
+        cout<<result<<endl;
     }
+    
     return(0);
 }
