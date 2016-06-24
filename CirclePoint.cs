@@ -71,16 +71,16 @@ namespace ConsoleApplication2
 
         static void classification2(Circle c, Point p1, Point p2)
         {
-            float qx = (p1.x + p2.x) / 2;
-            float qy = (p1.y + p2.y) / 2;
-            float E = (float)1, err = 10;
+            decimal qx = (p1.x + p2.x) / 2;
+            decimal qy = (p1.y + p2.y) / 2;
+            decimal E = (decimal)1, err = 10;
             bool flag = false;
             Point cent = c.cent;
             while (err > E)
             {
-                float terx = (qx - cent.x) * (qx - cent.x);
-                float tery = (qy - cent.y) * (qy - cent.y);
-                if (terx + tery <= c.radius * c.radius)
+                decimal terx = (qx - cent.x) * (qx - cent.x);
+                decimal tery = (qy - cent.y) * (qy - cent.y);
+                if (terx + tery <= (decimal)(c.radius * c.radius))
                 {
                     flag = true;
                     Console.Write("D");
@@ -113,10 +113,10 @@ namespace ConsoleApplication2
 
         static int getPointPosition(Circle c, Point p)
         {
-            long terx = (p.x - c.cent.x) * (p.x - c.cent.x);
-            long tery = (p.y - c.cent.y) * (p.y - c.cent.y);
-            if (terx + tery < (long)(c.radius * c.radius)) return (1);
-            else if (terx + tery > (long)(c.radius * c.radius)) return (3);
+            decimal terx = (decimal)(p.x - c.cent.x) * (decimal)(p.x - c.cent.x);
+            decimal tery = (decimal)(p.y - c.cent.y) * (decimal)(p.y - c.cent.y);
+            if (terx + tery < (decimal)(c.radius * c.radius)) return (1);
+            else if (terx + tery > (decimal)(c.radius * c.radius)) return (3);
             else return (2);
         }
 
