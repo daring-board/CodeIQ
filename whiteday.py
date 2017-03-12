@@ -17,9 +17,5 @@ try:
     n = int(in_str[1])
 except EOFError:
     pass
-for i in range(1, m+1):
-    for j in range(1, n+1):
-        gag = GetAndGive(i, j)
-        print(gag.count(), end="")
-        del gag
-    print()
+gag = GetAndGive(m, n)
+print(gag.count())
